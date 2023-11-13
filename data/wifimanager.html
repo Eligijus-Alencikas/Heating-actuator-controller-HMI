@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Superijus Smart</title>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:," />
+    <link
+      rel="stylesheet"
+      href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
+      integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    <script>
+      const test = () => {
+        fetch("test").then((response) => {
+          document.getElementById("testRe").innerHTML = response.text();
+        });
+      };
+    </script>
+  </head>
+  <body>
+    <!-- <div class="topnav">
+      <ul>
+        <h1 style="color: white">Superijus Smart</h1>
+        <li><a href="/">wifi</a></li>
+        <li><a href="settings">Tinklo nustatymai</a></li>
+        <li><a href="control1">Šildymo sistemos katilo pavaros valdymas</a></li>
+        <li><a href="control2">Termostatinis 8-ių kanalų valdymas</a></li>
+        <li><a href="control3">Įvesčių, išvesčių valdymas</a></li>
+      </ul>
+    </div> -->
+    <div class="content">
+      <div class="card-grid">
+        <div class="card">
+          <form action="/setupWifi" method="POST">
+            <p>
+              <label for="ssid">SSID</label>
+              <input type="text" name="ssid" id="ssid"><br />
+              <label for="pass">Password</label>
+              <input type="password" id="pass" name="pass" /><br />
+              <label for="ip">IP Address</label>
+              <input type="text" id="ip" name="ip" value="" /><br />
+              <label for="gateway">Default Gateway</label>
+              <input type="text" id="gateway" name="gateway"/><br />
+              <input type="submit" value="Submit" />
+            </p>
+          </form>
+          <p style="color: red">%WARNING%</p>
+        </div>
+      </div>
+    </div>
+    <style>
+      .card {
+        margin: 5%;
+      }
+    </style>
+  </body>
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Superijus Smart</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
+      integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
+    <script>
+      function myFunction() {
+        var txt;
+        if (confirm("Are you sure?")) {
+          document.getElementById("delConf").submit();
+        }
+      }
+    </script>
+</head>
+
+<body>
+    <div class="topnav">
+        <ul>
+          <li><a href="settings">Tinklo nustatymai</a></li>
+          <li><a href="control1">Šildymo sistemos katilo pavaros valdymas</a></li>
+        </ul>
+    </div>
+    <h1>Tinklo nustatymai</h1>
+    <div class="content">
+        <div class="card-grid">
+            <div class="card">
+                <p>
+                <form action="newIp" method="post">
+                    <label for="ip">Change IP: </label>
+                    <input type="text" value="%CURRENTIP%" id="ip" name="ip">
+                    <input type="submit" value="Save">
+                </form>
+                </p>
+                <p>
+                    <button class="button-on" style="background-color: red;" onclick="myFunction()">Delete
+                        configuration</button>
+                <form action="delConf" method="get" id="delConf"></form>
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

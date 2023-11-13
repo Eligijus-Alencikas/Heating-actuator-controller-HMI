@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Superijus Smart</title>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link
+      rel="stylesheet"
+      href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
+      integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr"
+      crossorigin="anonymous"
+    />
+    <script>
+      const timer = (ms) => new Promise((res) => setTimeout(res, ms));
+      let settingValues = [];
+      let start;
+      let duration;
+      let timeout = false;
+      let timeoutnum = 0;
+
+      const setGetTimeout = () => {
+        timeout = true;
+        timeoutnum = 0;
+      }
+
+
+      const getAllData = async () =>        //funkcija reikalinga uzklausti backendo info (requestas)
+      {
+        while(true)     //kol visata egzistuoja
+        {
+          if(timeout){
+            if(timeoutnum > 3){
+              timeout = false;
+            }else{
+              timeoutnum++;
+            }
+          }else{
+            try     //saugiklis jei nerespondina backendas (serveris)
+            {
+              fetch("getAllData")       //fetch komanda yra užklausa serveriui
+                .then((response) => response.json())    //sugaudo responsą ir išanalizuoja pagal json duomenų struktūros protokolą
+                .then((jsonResponse) => {
+                  console.log(jsonResponse);   //monitorinam
+                  for (let i = 1; i < 5; i++) {     //4 temperatūros
+                    document.getElementById("temp" + i).innerHTML =    //eina html document (page), ieško elementų: temp1, temp2, etc
+                      jsonResponse["temp" + i];     //ir prilygina pavadinimus tarp html ir json response iš serverio
+                  }
+                  for (let i = 1; i < 5; i++) {     //rėlių atvaizdavimas
+                    document.getElementById("par" + i).innerHTML =
+                      jsonResponse["par" + i];
+                  }
+                  for (let i = 1; i < 9; i++) {     //boolean values
+                    document.getElementById("checked" + i).checked =
+                      jsonResponse["checked" + i];
+                  }
+                  for (let i = 0; i < 10; i++) {    //kiti atkeliaujantys setingai
+                    if (
+                      window.getComputedStyle(
+                        document.getElementById("but_setting" + (i + 1)),   //button
+                        null
+                      ).display == "none"
+                    ) {
+                      settingValues[i] = jsonResponse["setting" + (i + 1)];   //išsiaiškinsim paskui
+                      document.getElementById("setting" + (i + 1)).value =
+                        settingValues[i];
+                    }
+                  }
+                });
+            } 
+            catch (err)     //neleidžia uzlušti serveriui, jei yra erroras komunikacijoje
+            {
+              console.log(err);
+            }
+          }
+          await timer(2000);     //loopink tą funkciją kas 500 ms.
+        }
+      };
+
+      document.addEventListener("input", function (evt) {  //stebi visus inputus: checkboksus, text data
+        if (evt.target.type == "number") {
+          let id = evt.target.id;
+          if (
+            document.getElementById(id).value !=
+            settingValues[id.replace("setting", "") - 1]
+          ) {
+            document.getElementById("but_" + id).style.display = "inline";
+          } else {
+            document.getElementById("but_" + id).style.display = "none";
+          }
+        }
+        if (evt.target.type == "checkbox") {
+          let data = {};  //sukuria objektą
+          start = Date.now();
+          data["checked"] = [
+            evt.target.id.replace("checked", ""),
+            evt.target.checked,
+          ];
+          sendData(data);
+        }
+      });
+
+      document.addEventListener("button", function (evt) {
+        console.log(evt);
+        document.getElementById("but_" + evt.target.id).style.visibility =
+          "hidden";
+      });
+
+      document.addEventListener("DOMContentLoaded", function (e) {
+        let buttons = document.getElementsByClassName("setting_but");
+
+        for (let i = 0; i < 10; i++) {
+          buttons[i].addEventListener("click", (evt) => {
+            let id = evt.target.id.replace("but_", "");
+            let number = document.getElementById(id).value;
+            settingValues[i] = number;
+            evt.target.style.display = "none";
+            let data = {};
+            data["settings"] = [id.replace("setting", ""), number];
+            sendData(data);
+          });
+        }
+        getAllData();
+      });
+
+      // const getData = async () => {
+      //   while (true) {
+      //     try {
+      //       if (start > 0) {
+      //         duration = Date.now() - start;
+      //         if (duration > 10000) {
+      //           console.log("time stuff");
+      //           getAllData();
+      //           start = Date.now();
+      //         }
+      //       }
+      //       await fetch("getData")
+      //         .then((response) => response.json())
+      //         .then((jsonResponse) => {
+      //           for (let i = 1; i < 5; i++) {
+      //             document.getElementById("temp" + i).innerHTML =
+      //               jsonResponse["temp" + i];
+      //           }
+      //           for (let i = 1; i < 5; i++) {
+      //             document.getElementById("par" + i).innerHTML =
+      //               jsonResponse["par" + i];
+      //           }
+      //         });
+      //     } catch (err) {
+      //       console.log(err);
+      //     }
+      //     getAllData();
+      //     await timer(7000);
+      //   }
+      // };
+
+      const loadDefParams = () => {
+        var txt;
+        if (confirm("Are you sure?")) {
+          try {
+            fetch("loadDefParams").then((response) => console.log(response));
+          } catch (err) {
+            console.log(err);
+          }
+        }
+      };
+
+      const sendData = async (data) => {
+        setGetTimeout();
+        try {
+          fetch("/sendData", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+          }).then((res) => {
+            console.log("Request complete! response:", res);
+          });
+        } catch (err) {
+          console.log(err);
+        }
+        let aDiv = document.querySelector(".everything");
+        let cur = document.getElementById("all");
+        aDiv.style.pointerEvents = "none";
+        cur.style.cursor = "wait";
+        await timer(1000);
+        cur.style.cursor = "auto";
+        aDiv.style.pointerEvents = "auto";
+      };
+
+      // const uzklausa = async () => {
+      //   try {
+      //     fetch("atsisiunciamViska")
+      //       .then((response) => response.text())
+      //       .then((res) => {
+              
+      //       });
+      //   } catch (err) {
+      //     console.log(err);
+      //   }
+      // };
+
+
+
+    </script>
+  </head>
+
+
+
+  <body>
+    <div class="everything" id="all">
+    <div class="topnav">
+      <ul>
+        <li><a href="settings">Tinklo nustatymai</a></li>
+        <li><a href="control1">Šildymo sistemos katilo pavaros valdymas</a></li>
+      </ul>
+    </div>
+    <h1>Šildymo sistemos katilo pavaros valdymas</h1>
+    <div class="content">
+      <div class="card-grid">
+        <div class="card">
+          <p>Temperatūros</p>
+          <div class="center">
+            <ul class="border">
+              <li>
+                Lauko temperatūra
+                <div class="attribute" id="temp4"></div>
+              </li>
+              <li>
+                Buitinio karšto vandens temperatura
+                <div class="attribute" id="temp2"></div>
+              </li>
+              <li>
+                Šildymo katilo temperatura
+                <div class="attribute" id="temp1"></div>
+              </li>
+              <li>
+                Šildymo sistemos vandens temperatūra
+                <div class="attribute" id="temp3"></div>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div class="card">
+          <p>Dabartinė rėlių būsena</p>
+          <ul class="border">
+            <li>
+              Cirkuliacinis šildymo sistemos siurbliukas
+              <div class="attribute" id="par1"></div>
+            </li>
+            <li>
+              Karsto vandens šildymas (KVC)
+              <div class="attribute" id="par2"></div>
+            </li>
+            <li>
+              pavaros sukimas šildymo didinimui
+              <div class="attribute" id="par3"></div>
+            </li>
+            <li>
+              pavaros sukima sildymo mažinimui
+              <div class="attribute" id="par4"></div>
+            </li>
+            <!-- <li>katilo užkūrimo rėlė: %PAR12%</li> -->
+          </ul>
+        </div>
+        <div class="card">
+          <p>Nustatymai</p>
+          <ul class="border" id="checkbox_settings">
+            <li>
+              Šildymo sistemos kontrolė įjungta
+              <label class="switch">
+                <input type="checkbox" id="checked1" />
+                <span class="slider round"></span>
+              </label>
+            </li>
+            <li>
+              Šildymo sistema valdoma pagal lauko temperatūrą
+              <label class="switch">
+                <input type="checkbox" id="checked2" />
+                <span class="slider round"></span>
+              </label>
+            </li>
+            <li>
+              Ar ruošiamas karštas buitinis vanduo
+              <label class="switch">
+                <input type="checkbox" id="checked3" />
+                <span class="slider round"></span>
+              </label>
+            </li>
+            <li>
+              Šildymo sistema veikia komforto režimu
+              <label class="switch">
+                <input type="checkbox" id="checked4" />
+                <span class="slider round"></span>
+              </label>
+            </li>
+            <li>
+              Šildymo sistema veikia ekonominiu režimu
+              <label class="switch">
+                <input type="checkbox" id="checked5" />
+                <span class="slider round"></span>
+              </label>
+            </li>
+            <li>
+              Šildymo sistema perjungta į rankinį (manual) režimą
+              <label class="switch">
+                <input type="checkbox" id="checked6" />
+                <span class="slider round"></span>
+              </label>
+            </li>
+            <li>
+              Katilo valdymas įjungtas
+              <label class="switch">
+                <input type="checkbox" id="checked7" />
+                <span class="slider round"></span>
+              </label>
+            </li>
+            <li>
+              KVC_valdo_KKK
+              <label class="switch">
+                <input type="checkbox" id="checked8" />
+                <span class="slider round"></span>
+              </label>
+            </li>
+          </ul>
+          <ul id="num_settings" class="num_settings">
+            <li>
+              <div class="setting_border">
+                KVC_nustatyta_temp
+                <input type="number" id="setting5" />
+              </div>
+              <button id="but_setting5" class="setting_but">Save</button>
+            </li>
+            <li>
+              <div class="setting_border">
+                GRN_nustatoma_temp
+                <input type="number" id="setting6" />
+              </div>
+              <button id="but_setting6" class="setting_but">Save</button>
+            </li>
+            <li>
+              <div class="setting_border">
+                Lauko_temp_KKK_startui
+                <input type="number" id="setting9" />
+              </div>
+              <button id="but_setting9" class="setting_but">Save</button>
+            </li>
+            <li>
+              <div class="setting_border">
+                KVC_histereze
+                <input type="number" id="setting4" />
+              </div>
+              <button id="but_setting4" class="setting_but">Save</button>
+            </li>
+            <li>
+              <div class="setting_border">
+                GRN_pavaros_sukimo_periodas
+                <input type="number" id="setting8" />
+              </div>
+              <button id="but_setting8" class="setting_but">Save</button>
+            </li>
+            <li>
+              <div class="setting_border">
+                GRN_KVC_valdymo_start_temp
+                <input type="number" id="setting2" />
+              </div>
+              <button id="but_setting2" class="setting_but">Save</button>
+            </li>
+            <li>
+              <div class="setting_border">
+                Temp_pazemejimas eko režimui
+                <input type="number" id="setting7" />
+              </div>
+              <button id="but_setting7" class="setting_but">Save</button>
+            </li>
+            <li>
+              <div class="setting_border">
+                Minimali_GRN_temp
+                <input type="number" id="setting1" />
+              </div>
+              <button id="but_setting1" class="setting_but">Save</button>
+            </li>
+            <li>
+              <div class="setting_border">
+                GRN_KVC_valdymo_stop_temp
+                <input type="number" id="setting3" />
+              </div>
+              <button id="but_setting3" class="setting_but">Save</button>
+            </li>
+            <li>
+              <div class="setting_border">
+                KKK_valdymo_histereze
+                <input type="number" id="setting10" />
+              </div>
+              <button id="but_setting10" class="setting_but">Save</button>
+            </li>
+            <br />
+            <button
+              style="background-color: red; padding: 10px"
+              onclick="loadDefParams()"
+            >
+              load Default parameters
+            </button>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="padding-bottom: 10px;">
+    <br />
+    ERA®
+    <br />
+
+  </div>
+  </body>
+</html>
