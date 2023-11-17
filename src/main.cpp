@@ -7,7 +7,7 @@
 #include <EEPROM.h>
 #include <functional>
 
-#define developerMode true
+#define developerMode false
 
 // Web server variables and setup:
 AsyncWebServer server(80);
@@ -144,7 +144,7 @@ void setup() {
   log(is_set_ip());
   log(is_set_SSID());
 
-  if(is_set_gateway() && is_set_ip() && is_set_SSID())
+  if(is_set_gateway() && is_set_SSID())
   {
     log("setting wifi values");
     char tmp[33] = "";
